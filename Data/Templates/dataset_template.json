@@ -1,0 +1,768 @@
+{
+    "tables": [
+        {
+            "name": "Team",
+            "type": "Static",
+            "isDefault": true,
+            "columns": [
+                {
+                    "name": "ID",
+                    "type": "string",
+                    "isDefault": true
+                },
+                {
+                    "name": "Name",
+                    "type": "string",
+                    "isDefault": true
+                },
+                {
+                    "name": "Role",
+                    "type": "string",
+                    "isDefault": true
+                },
+                {
+                    "name": "CostPerHour",
+                    "type": "Int64",
+                    "isDefault": true
+                }
+            ]
+        },
+        {
+            "name": "Attendance",
+            "type": "Static",
+            "isDefault": true,
+            "columns": [
+                {
+                    "name": "MemberID",
+                    "type": "string",
+                    "isDefault": true
+                },
+                {
+                    "name": "Day",
+                    "type": "string",
+                    "isDefault": true
+                },
+                {
+                    "name": "Activity",
+                    "type": "string",
+                    "isDefault": true
+                },
+                {
+                    "name": "WorkedHours",
+                    "type": "Int64",
+                    "isDefault": true
+                }
+            ]
+        },
+        {
+            "name": "Stories",
+            "type": "Static",
+            "isDefault": true,
+            "columns": [
+                {
+                    "name": "Process",
+                    "type": "string",
+                    "isDefault": true
+                },
+                {
+                    "name": "Hours",
+                    "type": "Int64",
+                    "isDefault": true
+                }
+            ],
+            "measures": [
+                {
+                    "name": "StoriesPoints-Planned Cost",
+                    "expression": "var avgHoursPerWorker = CALCULATE(SUM(Stories[Hours])/COUNT(Team[Id])) return SUMX(ADDColumns(Team, \"PlannedCost\", [CostPerHour]*avgHoursPerWorker), [PlannedCost])*Parameters[RiskBuffer]",
+                    "isDefault": true
+                },
+                {
+                    "name": "StoriesPoints-Planned Time",
+                    "expression": "SUM(Stories[Hours])*Parameters[RiskBuffer]",
+                    "isDefault": true
+                }
+            ]
+        },
+        {
+            "name": "Parameters",
+            "type": "Static",
+            "isDefault": true,
+            "columns": [
+                {
+                    "name": "Key",
+                    "type": "string",
+                    "isDefault": true
+                },
+                {
+                    "name": "Value",
+                    "type": "string",
+                    "isDefault": true
+                }
+            ],
+            "measures": [
+                {
+                    "name": "Current date",
+                    "expression": "FORMAT(TODAY(), \"DD/MM/YYYY\")",
+                    "isDefault": true
+                },
+                {
+                    "name": "Cost Budget",
+                    "expression": "int(CALCULATE (VALUES ( Parameters[Value]), FILTER ( ALL ( Parameters[Key] ),  Parameters[Key] = \"Budget\")))",
+                    "isDefault": true
+                },
+                {
+                    "name": "Project release",
+                    "expression": "CALCULATE (VALUES ( Parameters[Value] ),FILTER ( ALL ( Parameters[Key] ),  Parameters[Key] = \"ProjectRelease\"))",
+                    "isDefault": true
+                },
+                {
+                    "name": "Project start",
+                    "expression": "CALCULATE (VALUES ( Parameters[Value] ), FILTER ( ALL ( Parameters[Key] ),  Parameters[Key] = \"ProjectStart\"))",
+                    "isDefault": true
+                },
+                {
+                    "name": "RiskBuffer",
+                    "expression": "int(CALCULATE(VALUES ( Parameters[Value] ),FILTER ( ALL ( Parameters[Key] ),  Parameters[Key] = \"RiskBuffer\")))",
+                    "isDefault": true
+                },
+                {
+                    "name": "Used Time",
+                    "expression": "SUM(Attendance[WorkedHours])",
+                    "isDefault": true
+                },
+                {
+                    "name": "Days to release",
+                    "expression": "DATEDIFF(NOW(), [Project release], DAY)",
+                    "isDefault": true
+                },
+                {
+                    "name": "Past days",
+                    "expression": "DATEDIFF([Project start], NOW(), DAY) + 1",
+                    "isDefault": true
+                },
+                {
+                    "name": "Project Days",
+                    "expression": "DATEDIFF([Project start], [Project release], Day)",
+                    "isDefault": true
+                },
+                {
+                    "name": "Time Budget",
+                    "expression": "Calculate((DATEDIFF(Parameters[Project start], Parameters[Project release], Day)*(5/7))*8)",
+                    "isDefault": true
+                },
+                {
+                    "name": "Used Cost Budget",
+                    "expression": "var result = sumx(AddColumns(SUMMARIZECOLUMNS(Team[ID], Team[CostPerHour], \"Sum\", SUM(Attendance[WorkedHours])), \"Salary\", [CostPerHour]*[Sum]), [Salary]) return if(result = BLANK(), 0, result)",
+                    "isDefault": true
+                },
+                {
+                    "name": "Remaining Budget",
+                    "expression": "[Cost Budget] - [Used Cost Budget]",
+                    "isDefault": true
+                },
+                {
+                    "name": "Project Name",
+                    "expression": "CALCULATE(VALUES(Parameters[Value] ), FILTER(ALL(Parameters[Key] ), Parameters[Key]=\"ProjectName\"))",
+                    "isDefault": true
+                }
+            ]
+        },
+        {
+            "name": "CRS",
+            "primaryKey": "ID",
+            "isDefault": true,
+            "type": "Dynamic",
+            "columns": [
+                {
+                    "name": "ID",
+                    "type": "string",
+                    "isDynamic": false,
+                    "isDefault": true,
+                    "isIdentifier": true
+                },
+                {
+                    "name": "Description",
+                    "type": "string",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "Category",
+                    "type": "string",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "Priority",
+                    "type": "string",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "Status",
+                    "type": "string",
+                    "isDynamic": true,
+                    "isDefault": true
+                },
+                {
+                    "name": "Release",
+                    "type": "string",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "Complexity",
+                    "type": "Int64",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "Progress",
+                    "type": "string",
+                    "isDynamic": true,
+                    "isDefault": true
+                },
+                {
+                    "name": "SYRS_Link",
+                    "type": "string",
+                    "isDynamic": true,
+                    "isDefault": true
+                }
+            ],
+            "measures": [
+                {
+                    "name": "IsCompleteCRS",
+                    "expression": "var progress = SELECTEDVALUE(CRS[Progress]) var release = DateValue(SELECTEDVALUE(CRS[Release])) var isComplete = if(progress = \"Completed\", 1, if(release < TODAY(), 2, 0)) return isComplete",
+                    "isDefault": true
+                },
+                {
+                    "name": "Overdues CR",
+                    "expression": "var result = CALCULATE (SUMX(CRS,IF(DATEVALUE([Release]) < TODAY () && [Progress] <> \"Completed\", 1, 0))) return if(result = BLANK(), 0, result)",
+                    "isDefault": true
+                },
+                {
+                    "name": "Linked Coverage To SYRS Ratio",
+                    "expression": "var result = Calculate(count(CRS[SYRS_Link]), FILTER(CRS, CRS[SYRS_Link] = \"Linked\"))/COUNT(CRS[SYRS_Link]) return If(result = BLANK(), 0, result)",
+                    "format": "0\\ %;-0\\ %;0\\ %",
+                    "isDefault": true
+                },
+                {
+                    "name": "CRS Completion Per Day",
+                    "expression": "var completedRows = Filter(CRS, CRS[Progress] = \"Completed\") var countCompleted = COUNTX(completedRows, \"ID\") var hoursPerCompletedReq = Calculate((Parameters[Past days] * (5/7))/countCompleted) return IF(hoursPerCompletedReq = BLANK(), 0, If(countCompleted = 0, 0, hoursPerCompletedReq))",
+                    "format": "0",
+                    "isDefault": true
+                },
+                {
+                    "name": "Estimate CRS Days To Completed",
+                    "expression": "var completedRows = Filter(CRS, CRS[Progress] = \"Completed\") var countCompletedRows = COUNTX(completedRows, \"ID\") var hoursPerCompletedReq = Calculate((Parameters[Past days] * (5/7) * 8)/countCompletedRows) var IncompletedCR = FILTER(CRs, CRS[Progress] <> \"Completed\") var countIncompleted = CountX(IncompletedCR, \"ID\") var hoursToComplete = hoursPerCompletedReq * countIncompleted var workerDays = hoursToComplete / 8 var weekendDays = (workerDays / 5) * 2 var result = workerDays + weekendDays return if(result = BLANK(), 0, result)",
+                    "format": "0",
+                    "isDefault": true
+                },
+                {
+                    "name": "CRS Count completed req",
+                    "expression": "var result = CALCULATE(Count(CRS[ID]), FILTER(CRS, CRS[Progress] = \"Completed\")) return IF(result = BLANK(), 0, result)",
+                    "format": "0",
+                    "isDefault": true
+                },
+                {
+                    "name": "CRS Count New Req",
+                    "expression": "var result = CALCULATE(Count(CRS[ID]), FILTER(CRS, CRS[Status] = \"New\")) return If(result = BLANK(), 0, result)",
+                    "format": "0",
+                    "isDefault": true
+                },
+                {
+                    "name": "CRS Total Req",
+                    "expression": "var result = COUNT(CRS[ID]) return if(result = BLANK(), 0, result)",
+                    "format": "0",
+                    "isDefault": true
+                },
+                {
+                    "name": "Estimated Date For Completed CRS",
+                    "expression": "IFERROR(TODAY() + [Estimate CRS Days To Completed], \"No completed so far\")",
+                    "format": "Short Date",
+                    "isDefault": true
+                },
+                {
+                    "name": "CRS-Planned Cost",
+                    "expression": "var avgHoursPerWorker = CALCULATE(SUM(CRS[Complexity])/COUNT(Team[Id]))  return SUMX(ADDColumns(Team, \"PlannedCost\", [CostPerHour]*avgHoursPerWorker), [PlannedCost])*Parameters[RiskBuffer]",
+                    "isDefault": true
+                },
+                {
+                    "name": "CRS-Planned Time",
+                    "expression": "SUM(CRS[Complexity])*Parameters[RiskBuffer]",
+                    "isDefault": true
+                }
+            ]
+        },
+        {
+            "name": "SYRS",
+            "primaryKey": "ID",
+            "isDefault": true,
+            "type": "Dynamic",
+            "columns": [
+                {
+                    "name": "ID",
+                    "type": "string",
+                    "isDynamic": false,
+                    "isDefault": true,
+                    "isIdentifier": true
+                },
+                {
+                    "name": "Description",
+                    "type": "string",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "ReqType",
+                    "type": "string",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "Domain",
+                    "type": "string",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "Progress",
+                    "type": "string",
+                    "isDynamic": true,
+                    "isDefault": true
+                },
+                {
+                    "name": "Status",
+                    "type": "string",
+                    "isDynamic": true,
+                    "isDefault": true
+                },
+                {
+                    "name": "CRS_ID",
+                    "type": "string",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "Complexity",
+                    "type": "Int64",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "SWRS_Link",
+                    "type": "string",
+                    "isDynamic": true,
+                    "isDefault": true
+                },
+                {
+                    "name": "Release",
+                    "type": "string",
+                    "isDynamic": false,
+                    "isDefault": true
+                }
+            ],
+            "measures": [
+                {
+                    "name": "Overdues SYR",
+                    "expression": "var result = CALCULATE(SUMX(SYRS, IF(DATEVALUE([Release]) < TODAY (), 1, 0))) return IF(result = BLANK(), 0, result)",
+                    "isDefault": true
+                },
+                {
+                    "name": "Estimate SYRS Days To Completed",
+                    "expression": "var completedRows = Filter(SYRS, SYRS[Progress] = \"Completed\") var countCompletedRows = COUNTX(completedRows, \"ID\") var hoursPerCompletedReq = Calculate((Parameters[Past days] * (5/7) * 8)/countCompletedRows) var IncompletedCR = FILTER(SYRS, SYRS[Progress] <> \"Completed\") var countIncompleted = CountX(IncompletedCR, \"ID\") var hoursToComplete = hoursPerCompletedReq * countIncompleted var workerDays = hoursToComplete / 8 var weekendDays = (workerDays / 5) * 2 var result = workerDays + weekendDays return if(result = BLANK(), 0, result)",
+                    "isDefault": true,
+                    "format": "0"
+                },
+                {
+                    "name": "Linked Coverage To SWRS Ratio",
+                    "expression": "var result = Calculate(count(SYRS[SWRS_Link]), FILTER(SYRS, SYRS[SWRS_Link] = \"Linked\"))/COUNT(SYRS[SWRS_Link]) return if(result = BLANK(), 0, result)",
+                    "format": "0\\ %;-0\\ %;0\\ %",
+                    "isDefault": true
+                },
+                {
+                    "name": "IsCompleteSYRS",
+                    "expression": "var progress = SELECTEDVALUE(SYRS[Progress]) var release = DateValue(SELECTEDVALUE(SYRS[Release])) var isComplete = if(progress = \"Completed\", 1, if(release < TODAY(), 2, 0)) return isComplete",
+                    "isDefault": true
+                },
+                {
+                    "name": "SYRS Completed Per Day",
+                    "expression": "var completedRows = Filter(SYRS, SYRS[Progress] = \"Completed\") var countCompleted = COUNTX(completedRows, \"ID\") var hoursPerCompletedReq = Calculate((Parameters[Past days] * (5/7))/countCompleted) return IF(hoursPerCompletedReq = BLANK(), 0, If(countCompleted = 0, 0, hoursPerCompletedReq))",
+                    "format": "0",
+                    "isDefault": true
+                },
+                {
+                    "name": "SYRS Count completed req",
+                    "expression": "var result = CALCULATE(Count(SYRS[ID]), FILTER(SYRS, SYRS[Progress] = \"Completed\")) return IF(result = BLANK(), 0, result)",
+                    "format": "0",
+                    "isDefault": true
+                },
+                {
+                    "name": "SYRS Count New Req",
+                    "expression": "var result = CALCULATE(Count(SYRS[ID]), FILTER(SYRS, SYRS[Status] = \"New\")) return If(result = BLANK(), 0, result)",
+                    "format": "0",
+                    "isDefault": true
+                },
+                {
+                    "name": "SYRS Total Req",
+                    "expression": "var result = COUNT(SYRS[ID]) return if(result = BLANK(), 0, result)",
+                    "format": "0",
+                    "isDefault": true
+                },
+                {
+                    "name": "Estimated Date For Completed SYRS",
+                    "expression": "IFERROR(TODAY() + [Estimate SYRS Days To Completed], \"No completed so far\")",
+                    "format": "Short Date",
+                    "isDefault": true
+                },
+                {
+                    "name": "SYRS-Planned Cost",
+                    "expression": "var avgHoursPerWorker = CALCULATE(SUM(SYRS[Complexity])/COUNT(Team[Id])) return SUMX(ADDColumns(Team, \"PlannedCost\", [CostPerHour]*avgHoursPerWorker), [PlannedCost])*Parameters[RiskBuffer]",
+                    "isDefault": true
+                },
+                {
+                    "name": "SYRS-Planned Time",
+                    "expression": "SUM(SYRS[Complexity])*Parameters[RiskBuffer]",
+                    "isDefault": true
+                }
+            ]
+        },
+        {
+            "name": "SWRS",
+            "primaryKey": "ID",
+            "isDefault": true,
+            "type": "Dynamic",
+            "columns": [
+                {
+                    "name": "ID",
+                    "type": "string",
+                    "isDynamic": false,
+                    "isDefault": true,
+                    "isIdentifier": true
+                },
+                {
+                    "name": "Description",
+                    "type": "string",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "IncompletedScenarios",
+                    "type": "Int64",
+                    "isDynamic": true,
+                    "isDefault": true
+                },
+                {
+                    "name": "Status",
+                    "type": "string",
+                    "isDynamic": true,
+                    "isDefault": true
+                },
+                {
+                    "name": "SYRS_ID",
+                    "type": "string",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "Complexity",
+                    "type": "Int64",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "VerificationCriteria",
+                    "type": "string",
+                    "isDynamic": true,
+                    "isDefault": true
+                },
+                {
+                    "name": "Responsible",
+                    "type": "string",
+                    "isDynamic": true,
+                    "isDefault": true
+                },
+                {
+                    "name": "Release",
+                    "type": "string",
+                    "isDynamic": false,
+                    "isDefault": true
+                }
+            ],
+            "measures": [
+                {
+                    "name": "Estimate SWRS Days To Completed",
+                    "expression": "var completedRows = Filter(SWRS, SWRS[Status] = \"Passed Test\") var countCompletedRows = COUNTX(completedRows, \"ID\") var hoursPerCompletedReq = Calculate((Parameters[Past days] * (5/7) * 8)/countCompletedRows) var IncompletedCR = FILTER(SWRS, SWRS[Status] <> \"Passed Test\") var countIncompleted = CountX(IncompletedCR, \"ID\") var hoursToComplete = hoursPerCompletedReq * countIncompleted var workerDays = hoursToComplete / 8 var weekendDays = (workerDays / 5) * 2 var result = workerDays + weekendDays return if(result = BLANK(), 0, result)",
+                    "isDefault": true,
+                    "format": "0"
+                },
+                {
+                    "name": "IsCompleteSWRS",
+                    "expression": "var progress = SELECTEDVALUE(SWRS[Status]) var release = DateValue(SELECTEDVALUE(SWRS[Release])) return if(progress = \"Passed Test\", 4, if(release < NOW(), 0, if(progress = \"Failed Test\", 5, 1)))",
+                    "isDefault": true
+                },
+                {
+                    "name": "Overdues SWR",
+                    "expression": "var result = CALCULATE(SUMX(SWRS,IF(DATEVALUE([Release]) < TODAY() && [Status] <> \"Passed Test\", 1, 0))) return if(result = BLANK(), 0, result)",
+                    "isDefault": true
+                },
+                {
+                    "name": "SWRS Completion Per Day",
+                    "expression": "var completedRows = Filter(SWRS, SWRS[Status] = \"Passed Test\") var countCompleted = COUNTX(completedRows, \"ID\") var hoursPerCompletedReq = Calculate((Parameters[Past days] * (5/7))/countCompleted) return IF(hoursPerCompletedReq = BLANK(), 0, If(countCompleted = 0, 0, hoursPerCompletedReq))",
+                    "format": "0",
+                    "isDefault": true
+                },
+                {
+                    "name": "Verification Criteria Ratio",
+                    "expression": "var result = Calculate(count(SWRS[VerificationCriteria]), FILTER(SWRS, SWRS[VerificationCriteria] = \"Defined\"))/COUNT(SWRS[VerificationCriteria]) return if(result = BLANK(), 0, result)",
+                    "isDefault": true,
+                    "format": "0\\ %;-0\\ %;0\\ %"
+                },
+                {
+                    "name": "Incompleted scenarios target",
+                    "expression": "0",
+                    "isDefault": true
+                },
+                {
+                    "name": "SWRS Count completed req",
+                    "expression": "var result = CALCULATE(Count(SWRS[ID]), FILTER(SWRS, SWRS[Status] = \"Passed Test\")) return IF(result = BLANK(), 0, result)",
+                    "format": "0",
+                    "isDefault": true
+                },
+                {
+                    "name": "SWRS Count New Req",
+                    "expression": "var result = CALCULATE(Count(SWRS[ID]), FILTER(SWRS, SWRS[Status] = \"New\")) return If(result = BLANK(), 0, result)",
+                    "format": "0",
+                    "isDefault": true
+                },
+                {
+                    "name": "SWRS Count Total Req",
+                    "expression": "var result = COUNT(SWRS[ID]) return if(result = BLANK(), 0, result)",
+                    "format": "0",
+                    "isDefault": true
+                },
+                {
+                    "name": "Estimated Date For Completed SWRS",
+                    "expression": "IFERROR(TODAY() + [Estimate SWRS Days To Completed], \"No completed so far\")",
+                    "format": "Short Date",
+                    "isDefault": true
+                },
+                {
+                    "name": "SWRS-Planned Cost",
+                    "expression": "var avgHoursPerWorker = CALCULATE(SUM(SWRS[Complexity])/COUNT(Team[Id])) return SUMX(ADDColumns(Team, \"PlannedCost\", [CostPerHour]*avgHoursPerWorker), [PlannedCost])*Parameters[RiskBuffer]",
+                    "isDefault": true
+                },
+                {
+                    "name": "SWRS-Planned Time",
+                    "expression": "SUM(SWRS[Complexity])*Parameters[RiskBuffer]",
+                    "isDefault": true
+                }
+            ]
+        },
+        {
+            "name": "CRS_BY_Categories",
+            "type": "Calculated",
+            "isDefault": true,
+            "expression": "DEFINE var result = AddColumns(SUMMARIZECOLUMNS(CRS[Category], \"CompletedUnfinished\", Calculate(COUNT(CRS[Progress]), FILTER(CRS, [Progress]=\"Completed\")), \"Remaining\", Calculate(COUNT(CRS[Progress]), FILTER(CRS, ([Progress]=\"In Progress\" || [Progress]=\"Not Started\")))), \"Completed\", [CompletedUnfinished] + 0) EVALUATE result",
+            "columns": [
+                {
+                    "name": "Category",
+                    "type": "string",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "Completed",
+                    "type": "Int64",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "Remaining",
+                    "type": "Int64",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "CompletedUnfinished",
+                    "type": "Int64",
+                    "isDynamic": false,
+                    "isDefault": true
+                }
+            ]
+        },
+        {
+            "name": "SWRS_BY_SYRS_ID",
+            "type": "Calculated",
+            "isDefault": true,
+            "expression": "DEFINE var result = ADDCOlumns(SUMMARIZECOLUMNS(SWRS[SYRS_ID], \"Completed\", CALCULATE(COUNT(SWRS[SYRS_ID]), FILTER(SWRS, SWRS[Status] = \"Passed Test\")), \"Remaining\", CALCULATE(COUNT(SWRS[SYRS_ID]), FILTER(SWRS, (SWRS[Status] <> \"Passed Test\" ) ))),\"Ratio\", [Completed]/([Completed]+[Remaining])) EVALUATE result",
+            "columns": [
+                {
+                    "name": "SYRS_ID",
+                    "type": "string",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "Completed",
+                    "type": "Int64",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "Remaining",
+                    "type": "Int64",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "Ratio",
+                    "type": "Double",
+                    "isDynamic": false,
+                    "isDefault": true
+                }
+            ]
+        },
+        {
+            "name": "SYRS_BY_CRS_ID",
+            "type": "Calculated",
+            "isDefault": true,
+            "expression": "DEFINE var result = ADDCOlumns(SUMMARIZECOLUMNS(SYRS[CRS_ID], \"Completed\", CALCULATE(COUNT(SYRS[CRS_ID]), FILTER(SYRS, SYRS[Progress] = \"Completed\")), \"Remaining\", CALCULATE(COUNT(SYRS[CRS_ID]), FILTER(SYRS, (SYRS[Progress] = \"Not Started\" || SYRS[Progress] = \"In Progress\")))),\"Ratio\", [Completed]/([Completed]+[Remaining])) EVALUATE result",
+            "columns": [
+                {
+                    "name": "CRS_ID",
+                    "type": "string",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "Completed",
+                    "type": "Int64",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "Remaining",
+                    "type": "Int64",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "Ratio",
+                    "type": "Double",
+                    "isDynamic": false,
+                    "isDefault": true
+                }
+            ]
+        },
+        {
+            "name": "TeamActivities",
+            "type": "Calculated",
+            "isDefault": true,
+            "expression": "EVALUATE SUMMARIZECOLUMNS(Team[Name], Attendance[Activity], \"Count\", COUNT(Attendance[Activity]))",
+            "columns": [
+                {
+                    "name": "Name",
+                    "type": "string",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "Activity",
+                    "type": "string",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "Count",
+                    "type": "Int64",
+                    "isDynamic": false,
+                    "isDefault": true
+                }
+            ]
+        },
+        {
+            "name": "RefreshHistory",
+            "type": "Static",
+            "isDefault": true,
+            "columns": [
+                {
+                    "name": "TableName",
+                    "type": "String",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "FileName",
+                    "type": "String",
+                    "isDynamic": false,
+                    "isDefault": true
+                },
+                {
+                    "name": "Date",
+                    "type": "String",
+                    "isDynamic": false,
+                    "isDefault": true
+                }
+            ]
+        }
+    ],
+    "relationships": [
+        {
+            "name": "SYRS_CRS_ID - CRS_ID",
+            "fromTable": "SYRS",
+            "fromColumn": "CRS_ID",
+            "toTable": "CRS",
+            "toColumn": "ID",
+            "type": "BothDirections"
+        },
+        {
+            "name": "SWRS_SYRS_ID - SYRS_ID",
+            "fromTable": "SWRS",
+            "fromColumn": "SYRS_ID",
+            "toTable": "SYRS",
+            "toColumn": "ID",
+            "type": "BothDirections"
+        },
+        {
+            "name": "SWRS_Responsible - Team_ID",
+            "fromTable": "SWRS",
+            "fromColumn": "Responsible",
+            "toTable": "Team",
+            "toColumn": "ID",
+            "type": "BothDirections"
+        },
+        {
+            "name": "Attendance_MemberId - Team_ID",
+            "fromTable": "Attendance",
+            "fromColumn": "MemberId",
+            "toTable": "Team",
+            "toColumn": "ID",
+            "type": "BothDirections"
+        },
+        {
+            "name": "CRS_BY_Categories_Category - CRS_Category",
+            "fromTable": "CRS_BY_Categories",
+            "fromColumn": "Category",
+            "toTable": "CRS",
+            "toColumn": "Category",
+            "type": "BothDirections"
+        },
+        {
+            "name": "SYRS_BY_CRS_ID_CRS_ID - CRS_ID",
+            "fromTable": "SYRS_BY_CRS_ID",
+            "fromColumn": "CRS_ID",
+            "toTable": "CRS",
+            "toColumn": "ID",
+            "type": "BothDirections"
+        },
+        {
+            "name": "SWRS_BY_SYRS_ID_SYRS_ID - SYRS_ID",
+            "fromTable": "SWRS_BY_SYRS_ID",
+            "fromColumn": "SYRS_ID",
+            "toTable": "SYRS",
+            "toColumn": "ID",
+            "type": "BothDirections"
+        }
+    ]
+}

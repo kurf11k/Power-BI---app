@@ -1,0 +1,12 @@
+[
+    {
+        "name": "@Source_ID",
+        "dataType": "string",
+        "isDynamic": true
+    },
+    {
+        "name": "DateUpdate",
+        "dataType": "string",
+        "isDynamic": true
+    }
+]
